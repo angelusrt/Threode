@@ -1,82 +1,86 @@
 import './App.css'
-import { Canvas, useFrame } from "@react-three/fiber"
-import { useRef, useState } from 'react'
+import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader"
+import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
+import { Canvas, useFrame, useLoader } from "@react-three/fiber"
+import { useRef, Suspense } from 'react'
 import * as THREE from 'three'
 
-function Box(props) {
-  const [hovered, setHover] = useState(false)
-  const [active, setActive] = useState(false)
-  const mesh = useRef()
-  
-  useFrame((state, delta) => {
-    mesh.current.rotation.x += 0.005
-    mesh.current.rotation.y += 0.005
+function Well() {
+  const materials = useLoader(MTLLoader, "well.mtl")
+  const obj = useLoader(OBJLoader, 'well.obj', (loader) => {
+    materials.preload()
+    loader.setMaterials(materials)
   })
-  
-  return (
-    <mesh
-      position={props.position}
-      ref={mesh}
-      castShadow
-      scale={active ? 1.5 : 1}
-      onClick={(event) => setActive(!active)}
-      onPointerOver={(event) => setHover(true)}
-      onPointerOut={(event) => setHover(false)}
-    >
-      <boxGeometry attach="geometry" args={props.geo}/>
-      <meshStandardMaterial attach="material" color={hovered ? '#f25e41' : '#e83a2e'}/>
-    </mesh>
-  )
-}
+  const objRef = useRef()
+  //console.log(materials)
 
-function Plane(props) {
-  const mesh = useRef()
-  
-  return (
-    <mesh
-      position={props.position}
-      ref={mesh}
-      receiveShadow
-      scale={1.5}
-    >
-      <boxGeometry attach="geometry" args={props.geo}/>
-      <meshStandardMaterial attach="material" color='white'/>
-    </mesh>
-  )
+  useFrame((state, delta) => {
+    objRef.current.rotation.y += 0.005
+
+    objRef.current.children.map(children => {
+      if(children.name !== "Plane_Plane_Material.003" &&
+        children.name !== "Plane_Plane_Material.004" &&
+        children.name !== "Plane.001_Plane.001_Material.003" &&
+        children.name !== "Plane.001_Plane.001_Material.004"
+      ){
+        children.castShadow = true
+        children.receiveShadow = true
+      }
+      else{
+        children.castShadow = true
+      }
+      return null
+    })
+  })
+
+  return <primitive castShadow receiveShadow ref={objRef} object={obj} scale={0.4}/>
 }
 
 function App() {
   return (
-    <Canvas 
+    <Canvas
       gl={{
-        antialias: true,
+        antialias: false,
         shadowMap: {
           enabled: true,
           type: THREE.PCFSoftShadowMap
-        }
+        },
       }} 
       camera={{
-        position: [0, 1, -5],
+        position: [0, 7, 17],
         castShadow: true,
       }}
       shadows
       style={{ 
         height: window.innerHeight,
-        backgroundColor: "#212121"
+        width: window.innerWidth,
+        backgroundColor: "#35a551"
       }}
+      dpr={5}
+      
     >
-      <ambientLight 
-        intensity={0.5}
-      />
-      <directionalLight
+      <ambientLight intensity={0.01}/>
+      <spotLight
         castShadow
-        intensity={0.5} 
-        position={[10, 5, -1]}
+        intensity={0.3}
+        position={[-5, 10, 10]}
+        color="#FEFFA5"
       />
-      <group>
-        <Box position={[0, 0.1, 0]} geo={[1,1,1]}/>
-        <Plane position={[0, -2, 0]} geo={[20,1,20]}/>
-      </group>
+      <spotLight
+        castShadow
+        intensity={0.3} 
+        position={[10, 10, 10]}
+        color="#FFDED1"
+      />
+      <spotLight
+        castShadow
+        intensity={0.1} 
+        position={[5, 10, 10]}
+        color="#B9DDFF"
+      />
+      <Suspense fallback={null}>
+        <Well/>
+      </Suspense>
     </Canvas>
   )
 }
