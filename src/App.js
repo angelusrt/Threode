@@ -4,6 +4,7 @@ import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
 import { Canvas, useFrame, useLoader } from "@react-three/fiber"
 import { useRef, Suspense } from 'react'
 import * as THREE from 'three'
+import Model from "./Model"
 
 function Well() {
   const materials = useLoader(MTLLoader, "well.mtl")
@@ -25,29 +26,31 @@ function Well() {
       ){
         children.castShadow = true
         children.receiveShadow = true
+        // children.material.type = THREE.MeshToonMaterial
       }
       else{
         children.castShadow = true
       }
       return null
     })
+    // console.log(objRef.current)
   })
 
-  return <primitive castShadow receiveShadow ref={objRef} object={obj} scale={0.4}/>
+  return <primitive castShadow receiveShadow ref={objRef} object={obj} position={[0,0,0]} scale={0.4}/>
 }
 
 function App() {
   return (
     <Canvas
       gl={{
-        antialias: false,
+        antialias: true,
         shadowMap: {
           enabled: true,
           type: THREE.PCFSoftShadowMap
         },
       }} 
       camera={{
-        position: [0, 7, 17],
+        position: [0, 7, 15],
         castShadow: true,
       }}
       shadows
@@ -56,8 +59,7 @@ function App() {
         width: window.innerWidth,
         backgroundColor: "#35a551"
       }}
-      dpr={5}
-      
+      // dpr={5} 
     >
       <ambientLight intensity={0.01}/>
       <spotLight
@@ -78,8 +80,10 @@ function App() {
         position={[5, 10, 10]}
         color="#B9DDFF"
       />
+        
       <Suspense fallback={null}>
-        <Well/>
+        {/* <Well/> */}
+        <Model/>
       </Suspense>
     </Canvas>
   )
